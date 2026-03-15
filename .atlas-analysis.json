@@ -1,0 +1,94 @@
+{
+  "projectType": "saas",
+  "projectName": "VITACORE",
+  "projectDescription": "A web-based electronic health record (EHR) system for managing patient clinical histories, vital signs, medical evolutions, and healthcare professional configurations.",
+  "theme": "linden",
+  "primaryColor": "#1A6B8A",
+  "lightColor": "#E8F4F8",
+  "darkColor": "#0D3D52",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Getting Started",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Setup",
+            "pages": ["setup/installation", "setup/environment", "setup/database"]
+          }
+        ]
+      },
+      {
+        "tab": "User Guide",
+        "groups": [
+          {
+            "group": "Authentication",
+            "pages": ["guide/authentication/login", "guide/authentication/roles-permissions"]
+          },
+          {
+            "group": "Patients",
+            "pages": ["guide/patients/overview", "guide/patients/create", "guide/patients/manage"]
+          },
+          {
+            "group": "Clinical Records",
+            "pages": ["guide/clinical/evolutions", "guide/clinical/vital-signs"]
+          },
+          {
+            "group": "Administration",
+            "pages": ["guide/admin/users", "guide/admin/professionals", "guide/admin/facilities"]
+          }
+        ]
+      },
+      {
+        "tab": "Configuration",
+        "groups": [
+          {
+            "group": "System Setup",
+            "pages": ["configuration/overview", "configuration/headquarters", "configuration/offices", "configuration/specialties", "configuration/document-types", "configuration/countries", "configuration/services"]
+          },
+          {
+            "group": "Access Control",
+            "pages": ["configuration/roles", "configuration/users"]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Patient management with full demographic records",
+    "Clinical evolution notes (SOAP-style: reason, current illness, physical exam, diagnosis, plan)",
+    "Vital signs tracking with automatic BMI calculation",
+    "Role-based access control with granular module permissions",
+    "Multi-sede (multi-location) support for healthcare facilities",
+    "Healthcare professional registry with specialty and office assignments",
+    "Supabase-backed authentication and data persistence",
+    "Configurable document types, specialties, and medical services"
+  ],
+  "publicApiSurface": [
+    "GET /hc/ — Dashboard",
+    "GET/POST /auth/login — Authentication",
+    "GET /auth/logout — Session termination",
+    "GET /hc/pacientes/ — List patients",
+    "POST /hc/pacientes/crear — Create patient",
+    "POST /hc/pacientes/actualizar/<id> — Update patient",
+    "POST /hc/pacientes/toggle/<id> — Toggle patient status",
+    "GET /hc/pacientes/ver/<id> — Patient detail",
+    "GET /hc/evoluciones/paciente/<id> — List evolutions for patient",
+    "POST /hc/evoluciones/crear/<id> — Create evolution note",
+    "GET /hc/signos/paciente/<id> — List vital signs for patient",
+    "POST /hc/signos/crear/<id> — Record vital signs",
+    "GET/POST /hc/configuracion/roles-permisos — Roles & permissions matrix",
+    "POST /hc/configuracion/roles-permisos/crear — Create role",
+    "GET /hc/configuracion/usuarios — User management",
+    "GET /hc/configuracion/sedes — Headquarters management",
+    "GET /hc/configuracion/consultorios — Offices management",
+    "GET /hc/configuracion/especialidades — Specialties management",
+    "GET /hc/configuracion/profesionales — Healthcare professionals",
+    "GET /hc/configuracion/servicios — Medical services",
+    "GET /hc/configuracion/tipos-documento — Document types",
+    "GET /hc/configuracion/paises — Countries"
+  ]
+}
