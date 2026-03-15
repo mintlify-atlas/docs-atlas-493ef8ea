@@ -1,0 +1,73 @@
+---
+title: "User accounts"
+description: "Creating and managing VITACORE system user accounts"
+---
+
+User accounts control who can log into VITACORE. Each account is backed by a Supabase Auth identity and a `profiles` record that stores application-level metadata and the assigned role.
+
+**Route:** `/hc/configuracion/usuarios`
+
+## Creating a user
+
+<Steps>
+  <Step title="Open the users page">
+    Navigate to `/hc/configuracion/usuarios`. The create form is displayed alongside the user list.
+  </Step>
+  <Step title="Fill in the required fields">
+    Complete all five required fields (see below). All fields are validated before the account is created.
+  </Step>
+  <Step title="Submit the form">
+    On success, the system creates the Supabase Auth entry (with `email_confirm: true`) and inserts the corresponding `profiles` row. The user is active by default.
+  </Step>
+</Steps>
+
+## Fields
+
+<ParamField body="username" type="string" required>
+  The login name for the user. Must not be empty. Stored in lowercase. Used to identify the user within the application.
+</ParamField>
+
+<ParamField body="full_name" type="string" required>
+  The user's full display name as it appears in the UI and in audit records.
+</ParamField>
+
+<ParamField body="email" type="string" required>
+  The email address used by Supabase Auth for authentication. Stored in lowercase. Must be a valid and unique email address.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The initial password for the account. Must be at least 6 characters. Passed directly to Supabase Auth and is not stored in plaintext.
+</ParamField>
+
+<ParamField body="role_id" type="integer" required>
+  The ID of the role to assign to this user. Populated from the list of active roles. Determines what the user can see and do in the system.
+</ParamField>
+
+## Editing a user
+
+Navigate to `/hc/configuracion/usuarios/<user_id>/editar`. All profile fields (`username`, `full_name`, `email`, `role_id`) are editable. Email changes are propagated to Supabase Auth as well as the `profiles` table. The `is_active` flag can also be set on the edit form.
+
+## Toggling active status
+
+Use the toggle action on the user list to enable or disable an account without deleting it. The toggle posts to `/hc/configuracion/usuarios/<user_id>/estado` and flips the current `is_active` value.
+
+<Warning>
+  Inactive users (`is_active: false`) cannot log into VITACORE. The authentication middleware checks this flag on every request after login. Disable an account instead of deleting it to preserve audit history.
+</Warning>
+
+## Profile data model
+
+Each user account maps to one row in the `profiles` table:
+
+```json
+{
+  "id": "<supabase-auth-uuid>",
+  "username": "jperez",
+  "full_name": "Juan Pérez",
+  "email": "jperez@clinica.com",
+  "role_id": 1,
+  "is_active": true
+}
+```
+
+The `id` field is the UUID assigned by Supabase Auth and serves as the primary key for the `profiles` table.

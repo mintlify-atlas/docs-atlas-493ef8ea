@@ -1,0 +1,66 @@
+---
+title: "Offices (Consultorios)"
+description: "Managing individual office rooms within headquarters in VITACORE"
+---
+
+Offices — called **consultorios** — are the individual consultation rooms that exist within a sede (headquarters). Appointments and professional schedules are assigned at the office level.
+
+**Route:** `/hc/configuracion/consultorios`
+
+## Fields
+
+<ParamField body="sede_id" type="integer" required>
+  The ID of the sede this office belongs to. Chosen from a dropdown populated with all existing active sedes. At least one sede must exist before creating an office.
+</ParamField>
+
+<ParamField body="codigo" type="string" required>
+  A globally unique code for the office (e.g. `CONS-001`, `CONS-N-02`). Stored in uppercase. Must be unique across all offices in all sedes.
+</ParamField>
+
+<ParamField body="nombre" type="string" required>
+  The room or office name as displayed in the UI (e.g. `Consultorio 1`, `Sala de Procedimientos`).
+</ParamField>
+
+<ParamField body="piso" type="string">
+  The floor where the office is located (e.g. `1`, `2`, `PB`). Optional.
+</ParamField>
+
+<ParamField body="descripcion" type="string">
+  A free-text description of the office. Optional.
+</ParamField>
+
+<ParamField body="estado" type="string">
+  Status of the office. Accepted values: `ACTIVO` or `INACTIVO`.
+</ParamField>
+
+## CRUD flow
+
+<Steps>
+  <Step title="List offices">
+    Navigate to `/hc/configuracion/consultorios`. Records are ordered by status (active first) then by name.
+  </Step>
+  <Step title="Create an office">
+    Click **Nuevo consultorio**. Select the parent sede from the dropdown, then fill in `codigo` and `nombre`. The system rejects duplicate codes globally.
+  </Step>
+  <Step title="Edit an office">
+    Click the edit action on any row. The sede assignment can be changed. The duplicate-code check excludes the current record.
+  </Step>
+  <Step title="Toggle status">
+    Use the toggle action to switch between `ACTIVO` and `INACTIVO`.
+  </Step>
+</Steps>
+
+## Denormalized sede name
+
+When an office is created or edited, the system captures the sede's `nombre` at that moment and stores it as `sede_nombre` on the consultorio record. This allows the office list to display the sede name without a join.
+
+<Note>
+  `sede_nombre` is a snapshot taken at creation or edit time. If you later rename a sede, the stored `sede_nombre` on existing consultorios is **not** updated automatically. Re-save each affected office to refresh the denormalized value.
+</Note>
+
+## Status values
+
+| Value | Meaning |
+|---|---|
+| `ACTIVO` | Office is available for scheduling and assignments |
+| `INACTIVO` | Office is disabled and hidden from scheduling forms |

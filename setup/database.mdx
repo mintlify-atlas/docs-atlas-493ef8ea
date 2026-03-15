@@ -1,0 +1,101 @@
+---
+title: "Database setup"
+description: "Set up your Supabase project and required tables for VITACORE."
+---
+
+VITACORE uses Supabase as its database and authentication backend. This page explains how to create a Supabase project and which tables must exist before the application can run.
+
+## Create a Supabase project
+
+<Steps>
+  <Step title="Sign in to Supabase">
+    Go to [supabase.com](https://supabase.com) and sign in or create a free account.
+  </Step>
+
+  <Step title="Create a new project">
+    Click **New project**, choose your organization, set a project name, and pick a database password and region. Save the password — you will need it if you access the database directly via `psql`.
+  </Step>
+
+  <Step title="Copy your API credentials">
+    Once the project is provisioned, go to **Settings → API** and copy the following values into your `.env` file:
+
+    - **Project URL** → `SUPABASE_URL`
+    - **`anon` `public` key** → `SUPABASE_ANON_KEY`
+    - **`service_role` `secret` key** → `SUPABASE_SERVICE_ROLE_KEY`
+
+    See [Environment configuration](/setup/environment) for details on each variable.
+  </Step>
+
+  <Step title="Create the required tables">
+    Open the **SQL Editor** in your Supabase dashboard and create the tables listed in the next section. You can also use the **Table Editor** UI if you prefer a visual interface.
+  </Step>
+</Steps>
+
+## Required tables
+
+The following tables must exist in your Supabase project. VITACORE's repository layer reads from and writes to these tables directly.
+
+### Authentication
+
+| Table | Description |
+|---|---|
+| `auth.users` | Managed automatically by Supabase Auth. Stores credentials and issues JWTs. VITACORE calls `sign_in_with_password` against this table. |
+| `profiles` | One row per user. Links a `username` and `email` to a `auth.users` record, and stores `full_name`, `role_id`, and `is_active`. Required for the username-based login flow. |
+| `roles` | User roles referenced by `profiles.role_id`. Each role has a `code` and a `name`. |
+
+### Clinical records
+
+| Table | Description |
+|---|---|
+| `hc_pacientes` | Patient demographic records including document type, contact information, and insurance. |
+| `hc_evoluciones` | Clinical evolution (SOAP) notes linked to a patient and a professional. |
+| `hc_signos_vitales` | Vital sign measurements (weight, height, blood pressure, heart rate, respiratory rate, temperature). |
+| `hc_profesionales` | Healthcare professionals with specialty, assigned office, and professional license number. |
+
+### Configuration and lookup data
+
+| Table | Description |
+|---|---|
+| `hc_sedes` | Headquarters / physical locations. |
+| `hc_consultorios` | Offices within a headquarters. |
+| `hc_especialidades` | Medical specialties assigned to professionals. |
+| `hc_tipos_documento` | Document types (e.g. national ID, passport) used in patient records. |
+| `hc_servicios` | Medical services offered by the organization. |
+| `hc_paises` | Country list used in demographic forms. |
+
+### Permissions
+
+| Table | Description |
+|---|---|
+| `hc_modulos` | System modules that can be individually permissioned (e.g. patients, evolutions, vital signs). |
+| `hc_rol_modulo_permisos` | Permission matrix that maps a role and module to allowed actions: view, create, edit, delete. |
+
+## Seed data
+
+The repository includes JSON files in the `data/` directory that you can use to populate lookup tables with initial data:
+
+| File | Target table |
+|---|---|
+| `data/hc_sedes.json` | `hc_sedes` |
+| `data/hc_especialidades.json` | `hc_especialidades` |
+| `data/hc_consultorios.json` | `hc_consultorios` |
+| `data/hc_profesionales.json` | `hc_profesionales` |
+| `data/hc_tipos_documento.json` | `hc_tipos_documento` |
+
+<Note>
+  You can import these files using the Supabase **Table Editor → Import data from CSV/JSON** feature, or by writing a short Python script that reads each file and calls `supabase.table(...).insert(data).execute()`.
+</Note>
+
+## Row Level Security
+
+<Tip>
+  Enable Row Level Security (RLS) on all tables. VITACORE's server-side code uses the service role key to bypass RLS for administrative operations, so enabling RLS does not break functionality. It does, however, protect your data if the anon key is ever used directly against the database.
+
+  To enable RLS on a table, run:
+
+  ```sql
+  ALTER TABLE table_name ENABLE ROW LEVEL SECURITY;
+  ```
+
+  Then create policies that allow your service role to perform the operations it needs.
+</Tip>

@@ -1,0 +1,79 @@
+---
+title: "Medical services"
+description: "Managing the medical services catalog in VITACORE"
+---
+
+The services catalog defines the specific medical procedures and consultations that can be scheduled and billed within VITACORE. Each service can optionally be linked to a medical specialty.
+
+**Route:** `/hc/configuracion/servicios`
+
+## Fields
+
+<ParamField body="codigo" type="string" required>
+  A unique service code (e.g. `CONS-MG`, `ECO-OB`, `LAB-HGB`). Must be unique across all services.
+</ParamField>
+
+<ParamField body="nombre" type="string" required>
+  The display name of the service as it appears in scheduling and billing forms.
+</ParamField>
+
+<ParamField body="especialidad_id" type="integer">
+  Optional foreign key to `hc_especialidades`. Links the service to a medical specialty. When omitted the service is treated as general or cross-specialty.
+</ParamField>
+
+<ParamField body="descripcion" type="string">
+  Free-text description of the service. Optional.
+</ParamField>
+
+<ParamField body="estado" type="string">
+  Status of the service. Accepted values: `ACTIVO` or `INACTIVO`. Controlled via the toggle action.
+</ParamField>
+
+## CRUD flow
+
+<Steps>
+  <Step title="List services">
+    Navigate to `/hc/configuracion/servicios`. Records are ordered alphabetically by name. The specialty name is shown as a joined column from `hc_especialidades`.
+  </Step>
+  <Step title="Create a service">
+    Navigate to `/hc/configuracion/servicios/nuevo`. Fill in `codigo` and `nombre`. Optionally select a specialty.
+  </Step>
+  <Step title="Edit a service">
+    Navigate to `/hc/configuracion/servicios/<id>/editar` or use the edit action in the list. All fields are editable.
+  </Step>
+  <Step title="Toggle status">
+    Use the toggle action to switch between `ACTIVO` and `INACTIVO` without deleting the record.
+  </Step>
+</Steps>
+
+## Example records
+
+```json
+[
+  {
+    "codigo": "CONS-MG",
+    "nombre": "Consulta Medicina General",
+    "especialidad_id": null,
+    "descripcion": "Consulta de primera vez o control en medicina general",
+    "estado": "ACTIVO"
+  },
+  {
+    "codigo": "CONS-CARDIO",
+    "nombre": "Consulta Cardiología",
+    "descripcion": "Consulta especializada en cardiología",
+    "estado": "ACTIVO"
+  },
+  {
+    "codigo": "ECO-OB",
+    "nombre": "Ecografía Obstétrica",
+    "descripcion": "Ecografía de seguimiento del embarazo",
+    "estado": "ACTIVO"
+  },
+  {
+    "codigo": "LAB-HGB",
+    "nombre": "Hemograma Completo",
+    "descripcion": "Análisis de laboratorio clínico de sangre completa",
+    "estado": "ACTIVO"
+  }
+]
+```

@@ -1,0 +1,93 @@
+---
+title: "Document types"
+description: "Managing patient identification document types in VITACORE"
+---
+
+Document types define the kinds of identification documents that can be recorded for patients and healthcare professionals. Every person registered in VITACORE must have a document type associated with their identification number.
+
+**Route:** `/hc/configuracion/tipos-documento`
+
+## Fields
+
+<ParamField body="codigo" type="string" required>
+  A short, unique code for the document type (e.g. `CC`, `CE`, `PA`, `TI`). Stored in uppercase. The duplicate check is case-insensitive.
+</ParamField>
+
+<ParamField body="nombre" type="string" required>
+  The full name of the document type as it appears in registration forms (e.g. `Cédula de Ciudadanía`, `Pasaporte`).
+</ParamField>
+
+<ParamField body="descripcion" type="string">
+  An optional description with additional context about the document type.
+</ParamField>
+
+<ParamField body="estado" type="string">
+  Status of the document type. Accepted values: `ACTIVO` or `INACTIVO`.
+</ParamField>
+
+## CRUD flow
+
+<Steps>
+  <Step title="List document types">
+    Navigate to `/hc/configuracion/tipos-documento`. Records are ordered by status (active first) then by code.
+  </Step>
+  <Step title="Create a document type">
+    Click **Nuevo tipo de documento**. Provide a unique `codigo` and a `nombre`.
+  </Step>
+  <Step title="Edit a document type">
+    All fields are editable. The duplicate-code check is case-insensitive and excludes the current record.
+  </Step>
+  <Step title="Toggle status">
+    Switch between `ACTIVO` and `INACTIVO` using the toggle action.
+  </Step>
+</Steps>
+
+## Sample data
+
+The following codes cover the most common identification documents used in Colombia:
+
+```json
+[
+  {
+    "codigo": "CC",
+    "nombre": "Cédula de Ciudadanía",
+    "descripcion": "Documento de identidad de ciudadanos colombianos mayores de 18 años",
+    "estado": "ACTIVO"
+  },
+  {
+    "codigo": "CE",
+    "nombre": "Cédula de Extranjería",
+    "descripcion": "Documento de identidad para extranjeros residentes en Colombia",
+    "estado": "ACTIVO"
+  },
+  {
+    "codigo": "PA",
+    "nombre": "Pasaporte",
+    "descripcion": "Documento de viaje internacional",
+    "estado": "ACTIVO"
+  },
+  {
+    "codigo": "TI",
+    "nombre": "Tarjeta de Identidad",
+    "descripcion": "Documento de identidad para menores de 18 años colombianos",
+    "estado": "ACTIVO"
+  },
+  {
+    "codigo": "RC",
+    "nombre": "Registro Civil",
+    "descripcion": "Registro civil de nacimiento, usado para recién nacidos",
+    "estado": "ACTIVO"
+  },
+  {
+    "codigo": "NIT",
+    "nombre": "NIT",
+    "descripcion": "Número de Identificación Tributaria, usado para entidades",
+    "estado": "ACTIVO"
+  }
+]
+```
+
+## Where document types are used
+
+- **Patient registration** — patients must select a document type before entering their ID number.
+- **Healthcare professional registration** — professionals are also registered with a document type and number. The combination of `tipo_documento_id` + `numero_documento` must be unique per professional.

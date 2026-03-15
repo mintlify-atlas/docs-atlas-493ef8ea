@@ -1,0 +1,216 @@
+---
+title: "Facilities management"
+description: "Managing headquarters (sedes) and offices (consultorios) in VITACORE"
+---
+
+VITACORE organises physical locations in a two-level hierarchy:
+
+```
+Sede (headquarters / branch location)
+  └── Consultorio (office / room within a sede)
+```
+
+A **sede** represents a distinct physical site such as a clinic, hospital branch, or administrative office. A **consultorio** is a specific room or cabinet within a sede — for example, "Consulting Room 1" on the second floor of the North Branch.
+
+Professionals and appointments are assigned to both a sede and a consultorio, so these records should be configured before adding healthcare professionals.
+
+<Tip>
+  Create all sedes before creating consultorios. The consultorio form requires you to select a parent sede from the active sedes list.
+</Tip>
+
+---
+
+<Tabs>
+  <Tab title="Sedes (Headquarters)">
+
+    ## Overview
+
+    Sedes are managed at **Configuración > Sedes** (`/hc/configuracion/sedes`).
+
+    | Method | Path | Purpose |
+    |--------|------|---------|
+    | `GET` | `/hc/configuracion/sedes` | List all sedes |
+    | `GET` | `/hc/configuracion/sedes/nueva` | Display the create form |
+    | `POST` | `/hc/configuracion/sedes/nueva` | Submit the create form |
+    | `GET` | `/hc/configuracion/sedes/editar/<sede_id>` | Display the edit form |
+    | `POST` | `/hc/configuracion/sedes/editar/<sede_id>` | Submit the edit form |
+    | `POST` | `/hc/configuracion/sedes/toggle/<sede_id>` | Toggle ACTIVA / INACTIVA |
+
+    ---
+
+    ## Creating a sede
+
+    <Steps>
+      <Step title="Navigate to Sedes">
+        Go to **Configuración > Sedes** or open `/hc/configuracion/sedes`.
+      </Step>
+
+      <Step title="Open the create form">
+        Click **Nueva sede**.
+      </Step>
+
+      <Step title="Fill in the form">
+        Provide at minimum a unique **Código** and a **Nombre**. The remaining fields are optional.
+      </Step>
+
+      <Step title="Submit">
+        Click **Guardar**. The system checks that no other sede shares the same `codigo` (case-insensitive, stored as uppercase). On success: **"Sede creada correctamente."**
+      </Step>
+    </Steps>
+
+    ---
+
+    ## Sede fields
+
+    <ParamField body="codigo" type="string" required>
+      Short unique identifier for the sede. Automatically converted to uppercase before saving. Must be unique across all sedes — a duplicate triggers **"Ya existe una sede con ese código."**
+    </ParamField>
+
+    <ParamField body="nombre" type="string" required>
+      Full display name of the sede (e.g. `Sede Norte`, `Clínica Central`).
+    </ParamField>
+
+    <ParamField body="ciudad" type="string">
+      Optional. City where the sede is located.
+    </ParamField>
+
+    <ParamField body="direccion" type="string">
+      Optional. Street address of the sede.
+    </ParamField>
+
+    <ParamField body="telefono" type="string">
+      Optional. Main phone number for the sede.
+    </ParamField>
+
+    <ParamField body="estado" type="string">
+      `ACTIVA` or `INACTIVA`. Defaults to `ACTIVA` on creation. Only ACTIVA sedes appear in the consultorio and professional assignment dropdowns.
+    </ParamField>
+
+    ---
+
+    ## Toggling sede status
+
+    Posting to `/hc/configuracion/sedes/toggle/<sede_id>` switches the `estado` between `ACTIVA` and `INACTIVA`.
+
+    - **ACTIVA** — the sede appears in all location selection dropdowns.
+    - **INACTIVA** — the sede is hidden from dropdowns but its data and associated consultorios are preserved.
+
+    On success: **"Sede activada correctamente."** or **"Sede inactivada correctamente."**
+
+  </Tab>
+
+  <Tab title="Consultorios (Offices)">
+
+    ## Overview
+
+    Consultorios are managed at **Configuración > Consultorios** (`/hc/configuracion/consultorios`).
+
+    | Method | Path | Purpose |
+    |--------|------|---------|
+    | `GET` | `/hc/configuracion/consultorios` | List all consultorios |
+    | `GET` | `/hc/configuracion/consultorios/nuevo` | Display the create form |
+    | `POST` | `/hc/configuracion/consultorios/nuevo` | Submit the create form |
+    | `GET` | `/hc/configuracion/consultorios/editar/<item_id>` | Display the edit form |
+    | `POST` | `/hc/configuracion/consultorios/editar/<item_id>` | Submit the edit form |
+    | `POST` | `/hc/configuracion/consultorios/toggle/<item_id>` | Toggle ACTIVO / INACTIVO |
+
+    ---
+
+    ## Creating a consultorio
+
+    <Steps>
+      <Step title="Navigate to Consultorios">
+        Go to **Configuración > Consultorios** or open `/hc/configuracion/consultorios`.
+      </Step>
+
+      <Step title="Open the create form">
+        Click **Nuevo consultorio**.
+      </Step>
+
+      <Step title="Select the parent sede">
+        Choose the **Sede** this consultorio belongs to. Only sedes that already exist in the `hc_sedes` table are available. The selected sede's name is stored in `sede_nombre` alongside the `sede_id` for fast display.
+      </Step>
+
+      <Step title="Fill in the remaining fields">
+        Provide a unique **Código** and a **Nombre**. Optionally set the floor and a description.
+      </Step>
+
+      <Step title="Submit">
+        Click **Guardar**. The system validates that a sede is selected and that the `codigo` is unique. On success: **"Consultorio creado correctamente."**
+      </Step>
+    </Steps>
+
+    ---
+
+    ## Consultorio fields
+
+    <ParamField body="sede_id" type="integer" required>
+      ID of the parent sede. Must be selected from the active sedes list. Submitting without a sede triggers **"Debes seleccionar una sede."**
+    </ParamField>
+
+    <ParamField body="codigo" type="string" required>
+      Short unique identifier for the consultorio. Converted to uppercase before saving. Must be unique across **all** consultorios regardless of sede — a duplicate triggers **"Ya existe un consultorio con ese código."**
+    </ParamField>
+
+    <ParamField body="nombre" type="string" required>
+      Display name for the consultorio (e.g. `Consultorio 1`, `Sala de Procedimientos`).
+    </ParamField>
+
+    <ParamField body="piso" type="string">
+      Optional. Floor or level within the sede building (e.g. `2`, `Planta Baja`).
+    </ParamField>
+
+    <ParamField body="descripcion" type="string">
+      Optional. Free-text description of the room or its purpose.
+    </ParamField>
+
+    <ParamField body="estado" type="string">
+      `ACTIVO` or `INACTIVO`. Defaults to `ACTIVO` on creation.
+    </ParamField>
+
+    ---
+
+    ## Denormalized sede name
+
+    <Note>
+      When a consultorio is created or updated, the parent sede's `nombre` is resolved from `hc_sedes` and stored directly in the `sede_nombre` column of `hc_consultorios`. This means the sede name is available without a join when listing consultorios, but if a sede is renamed the consultorio's `sede_nombre` will not update automatically — it will reflect the name at the time the consultorio was last saved.
+    </Note>
+
+    ---
+
+    ## Toggling consultorio status
+
+    Posting to `/hc/configuracion/consultorios/toggle/<item_id>` alternates the `estado` between `ACTIVO` and `INACTIVO`.
+
+    - **ACTIVO** — the consultorio is available for professional and appointment assignment.
+    - **INACTIVO** — the consultorio is hidden from selection lists.
+
+    On success: **"Consultorio activado correctamente."** or **"Consultorio inactivado correctamente."**
+
+  </Tab>
+</Tabs>
+
+---
+
+## Data model overview
+
+```
+hc_sedes
+  ├── id
+  ├── codigo           (unique, uppercase)
+  ├── nombre
+  ├── ciudad
+  ├── direccion
+  ├── telefono
+  └── estado           (ACTIVA | INACTIVA)
+
+hc_consultorios
+  ├── id
+  ├── sede_id          ──► hc_sedes.id
+  ├── sede_nombre      (denormalized copy of hc_sedes.nombre)
+  ├── codigo           (unique, uppercase)
+  ├── nombre
+  ├── piso
+  ├── descripcion
+  └── estado           (ACTIVO | INACTIVO)
+```

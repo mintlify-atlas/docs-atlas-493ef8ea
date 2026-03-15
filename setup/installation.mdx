@@ -1,0 +1,92 @@
+---
+title: "Installation"
+description: "Detailed installation guide for VITACORE."
+---
+
+## Prerequisites
+
+Before you begin, make sure you have the following:
+
+| Requirement | Version |
+|---|---|
+| Python | 3.9 or later |
+| pip | Included with Python 3.9+ |
+| Supabase project | Free tier is sufficient |
+
+If you don't have a Supabase project yet, create one at [supabase.com](https://supabase.com) before continuing.
+
+## Clone the repository
+
+```bash
+git clone https://github.com/msgiraldo01-wq/VITACORE.git
+cd VITACORE
+```
+
+## Set up a virtual environment
+
+Using a virtual environment keeps VITACORE's dependencies isolated from your system Python installation.
+
+<Tabs>
+  <Tab title="Linux / macOS">
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+  </Tab>
+  <Tab title="Windows">
+    ```bash
+    python -m venv venv
+    venv\Scripts\activate
+    ```
+  </Tab>
+</Tabs>
+
+You should see `(venv)` at the start of your shell prompt, confirming the environment is active.
+
+## Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+The `requirements.txt` file installs three packages:
+
+```text requirements.txt
+flask
+supabase
+python-dotenv
+```
+
+| Package | Purpose |
+|---|---|
+| `flask` | Web framework and routing |
+| `supabase` | Supabase Python client for auth and database queries |
+| `python-dotenv` | Loads environment variables from a `.env` file |
+
+## Application architecture
+
+VITACORE uses Flask **Blueprints** to separate the application into independent modules. The following blueprints are registered in `app.py`:
+
+| Blueprint | Prefix | Description |
+|---|---|---|
+| `bp_auth` | `/auth` | Login and logout |
+| `bp_roles` | — | Role configuration |
+| `bp_admin` | — | Admin-level configuration |
+| `bp_permisos_rutas` | — | Route permission management |
+| `bp_usuarios` | — | User account management |
+| `bp_hc_configuracion` | `/hc/configuracion` | Clinical system configuration |
+| `bp_hc_dashboard` | `/hc` | Main dashboard |
+| `bp_hc_pacientes` | `/hc/pacientes` | Patient records |
+| `bp_hc_evoluciones` | `/hc/evoluciones` | Clinical evolution notes |
+| `bp_hc_signos` | `/hc/signos` | Vital signs |
+
+<Note>
+  `app.py` starts Flask with `debug=True`. This enables the interactive debugger and automatic reloader, which is useful during development but **must not be used in production**. Set `debug=False` or use a production WSGI server such as Gunicorn when deploying.
+</Note>
+
+## Next steps
+
+With the application installed, configure your environment variables before running VITACORE:
+
+- [Environment configuration](/setup/environment) — Set Supabase credentials and Flask secret key
+- [Database setup](/setup/database) — Create the required tables in your Supabase project

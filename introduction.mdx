@@ -1,0 +1,69 @@
+---
+title: "VITACORE — Historia Clínica Electrónica"
+description: "Sistema web de historia clínica electrónica para gestión de pacientes, evoluciones clínicas, signos vitales y configuración de profesionales de salud."
+---
+
+## What is VITACORE?
+
+VITACORE is a web-based **Electronic Health Record (EHR)** system built with Flask and Supabase. It provides healthcare organizations with a centralized platform to manage patient records, track clinical evolutions, record vital signs, and administer healthcare professionals across multiple locations.
+
+<CardGroup cols={2}>
+  <Card title="Patient Management" icon="user-doctor">
+    Create and manage complete patient demographic records including document types, insurance, and contact information.
+  </Card>
+  <Card title="Clinical Evolutions" icon="notes-medical">
+    Record SOAP-style consultation notes including chief complaint, current illness, physical exam, diagnosis, and treatment plan.
+  </Card>
+  <Card title="Vital Signs" icon="heart-pulse">
+    Track weight, height, blood pressure, heart rate, respiratory rate, and temperature — with automatic BMI calculation.
+  </Card>
+  <Card title="Role-Based Access" icon="shield-halved">
+    Granular permission matrix per role covering view, create, edit, and delete actions for every module.
+  </Card>
+  <Card title="Multi-Location Support" icon="building-columns">
+    Manage multiple headquarters (sedes) and offices (consultorios) within a single installation.
+  </Card>
+  <Card title="Professional Registry" icon="stethoscope">
+    Register healthcare professionals with specialty, assigned office, and professional license number.
+  </Card>
+</CardGroup>
+
+## Technology stack
+
+| Component | Technology |
+|-----------|-----------|
+| Backend framework | Python / Flask |
+| Database & Auth | Supabase (PostgreSQL + Auth) |
+| Session management | Flask server-side sessions |
+| Frontend | Jinja2 HTML templates |
+| Environment | python-dotenv |
+
+## How the system is organized
+
+VITACORE uses Flask **Blueprints** to separate concerns:
+
+- **`/auth`** — Login and logout
+- **`/hc`** — Dashboard
+- **`/hc/pacientes`** — Patient CRUD
+- **`/hc/evoluciones`** — Clinical evolution notes
+- **`/hc/signos`** — Vital signs
+- **`/hc/configuracion`** — System configuration (sedes, consultorios, especialidades, profesionales, servicios, países, tipos de documento)
+- **`/hc/configuracion/roles-permisos`** — Role and permission management
+- **`/hc/configuracion/usuarios`** — User account management
+
+## Get started
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get VITACORE running locally in minutes.
+  </Card>
+  <Card title="Installation" icon="wrench" href="/setup/installation">
+    Detailed installation and dependency setup.
+  </Card>
+  <Card title="Environment config" icon="gear" href="/setup/environment">
+    Configure Supabase credentials and Flask secrets.
+  </Card>
+  <Card title="Database setup" icon="database" href="/setup/database">
+    Set up your Supabase project and required tables.
+  </Card>
+</CardGroup>

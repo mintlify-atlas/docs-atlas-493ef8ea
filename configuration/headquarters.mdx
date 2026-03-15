@@ -1,0 +1,93 @@
+---
+title: "Headquarters (Sedes)"
+description: "Managing healthcare facility locations in VITACORE"
+---
+
+Headquarters — called **sedes** in the system — represent the physical locations where healthcare services are delivered. Every office (consultorio) and professional assignment is tied to a sede.
+
+**Route:** `/hc/configuracion/sedes`
+
+## Fields
+
+<ParamField body="codigo" type="string" required>
+  A short, unique identifier for the sede (e.g. `SEDE001`, `NORTE`, `CLINICA-A`). The value is stored in uppercase. Used as a reference key across the system and must be globally unique.
+</ParamField>
+
+<ParamField body="nombre" type="string" required>
+  The display name of the sede as it appears in lists and selection dropdowns.
+</ParamField>
+
+<ParamField body="ciudad" type="string">
+  The city where this sede is located. Optional but recommended for multi-city facilities.
+</ParamField>
+
+<ParamField body="direccion" type="string">
+  Street address of the sede.
+</ParamField>
+
+<ParamField body="telefono" type="string">
+  Contact phone number for this location.
+</ParamField>
+
+<ParamField body="estado" type="string">
+  Status of the sede. Accepted values: `ACTIVA` or `INACTIVA`.
+</ParamField>
+
+## CRUD flow
+
+<Steps>
+  <Step title="List sedes">
+    Navigate to `/hc/configuracion/sedes`. The list is ordered by status (active first) then by name.
+  </Step>
+  <Step title="Create a sede">
+    Click **Nueva sede** and fill in the form. `codigo` and `nombre` are required. The system rejects duplicate codes.
+  </Step>
+  <Step title="Edit a sede">
+    Click the edit action on any sede row. All fields are editable. The duplicate-code check excludes the current record.
+  </Step>
+  <Step title="Toggle status">
+    Use the toggle action to switch a sede between `ACTIVA` and `INACTIVA` without deleting it.
+  </Step>
+</Steps>
+
+## Status values
+
+| Value | Meaning |
+|---|---|
+| `ACTIVA` | Sede is operational and visible in selection lists |
+| `INACTIVA` | Sede is disabled; hidden from new assignments |
+
+## Example records
+
+```json
+[
+  {
+    "codigo": "SEDE-NORTE",
+    "nombre": "Sede Norte",
+    "ciudad": "Bogotá",
+    "direccion": "Calle 100 # 15-20",
+    "telefono": "601-555-0101",
+    "estado": "ACTIVA"
+  },
+  {
+    "codigo": "SEDE-SUR",
+    "nombre": "Sede Sur",
+    "ciudad": "Bogotá",
+    "direccion": "Carrera 30 # 40-10",
+    "telefono": "601-555-0202",
+    "estado": "ACTIVA"
+  },
+  {
+    "codigo": "SEDE-MED",
+    "nombre": "Sede Medellín",
+    "ciudad": "Medellín",
+    "direccion": "Av. El Poblado # 5-60",
+    "telefono": "604-555-0303",
+    "estado": "ACTIVA"
+  }
+]
+```
+
+<Note>
+  The `codigo` field is used as a stable reference identifier throughout the system. It must be globally unique across all sedes. Changing a sede's `codigo` after it has been referenced by other records is not recommended.
+</Note>

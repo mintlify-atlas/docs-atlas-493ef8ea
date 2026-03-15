@@ -1,0 +1,59 @@
+---
+title: "Patient overview"
+description: "Understanding patient records in VITACORE"
+---
+
+A patient record is the central demographic entity in VITACORE. Every clinical workflow — consultations, orders, and reports — is anchored to a patient record stored in the `hc_pacientes` table and served under the `/hc/pacientes` route prefix.
+
+## Patient record fields
+
+Each patient record holds the following information:
+
+| Field | Description |
+|---|---|
+| `tipo_documento_id` | Foreign key to the configured document type (e.g., cédula, pasaporte) |
+| `numero_documento` | The document number — must be unique across all patients |
+| `nombres` | Patient's first name(s) |
+| `apellidos` | Patient's last name(s) |
+| `fecha_nacimiento` | Date of birth |
+| `sexo` | Sex / gender |
+| `telefono` | Landline phone number |
+| `celular` | Mobile phone number |
+| `email` | Email address |
+| `direccion` | Home address |
+| `aseguradora` | Health insurance provider name |
+| `estado` | Record status: `ACTIVO` or `INACTIVO` |
+
+The system also stores `created_at` and `updated_at` timestamps automatically.
+
+## Patient status
+
+Every patient has an `estado` field that controls whether the record is considered active in the system.
+
+- **ACTIVO** — the patient is active and available for all clinical workflows.
+- **INACTIVO** — the patient has been deactivated. The record is preserved in full and can be reactivated at any time.
+
+Status is toggled with a single action and does **not** delete or modify any clinical data associated with the patient.
+
+## Duplicate detection
+
+Before a new patient is created, the system queries `hc_pacientes` by `numero_documento`. If a record with the same document number already exists, the creation is blocked and a flash error message is shown. This check is case-sensitive and trims surrounding whitespace.
+
+## Route prefix
+
+All patient routes are mounted under:
+
+```text
+/hc/pacientes
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Create a patient" icon="user-plus" href="/guide/patients/create">
+    Register a new patient record in VITACORE.
+  </Card>
+  <Card title="Manage patients" icon="users" href="/guide/patients/manage">
+    View, edit, and change the status of existing patient records.
+  </Card>
+</CardGroup>

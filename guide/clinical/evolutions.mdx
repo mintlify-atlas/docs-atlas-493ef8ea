@@ -1,0 +1,74 @@
+---
+title: "Clinical evolutions"
+description: "Recording and managing clinical evolution notes for patients"
+---
+
+A **clinical evolution** (`hc_evoluciones`) represents a single patient encounter note — one visit, one record. Each evolution captures the full narrative of a consultation using a SOAP-adjacent structure, from the patient's chief complaint through the attending physician's treatment plan.
+
+Evolutions are stored in the `hc_evoluciones` Supabase table and are always scoped to a specific patient via `paciente_id`. They are returned in reverse chronological order (most recent first).
+
+## Routes
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/hc/evoluciones/paciente/<paciente_id>` | List all evolutions for a patient |
+| `GET` | `/hc/evoluciones/nuevo/<paciente_id>` | Render the new evolution form |
+| `POST` | `/hc/evoluciones/crear/<paciente_id>` | Submit and create a new evolution |
+
+## Fields
+
+<ParamField path="paciente_id" type="integer" required>
+  Foreign key linking the evolution to a specific patient record. Set automatically from the URL — cannot be changed after creation.
+</ParamField>
+
+<ParamField body="motivo_consulta" type="string" required>
+  **Chief complaint / reason for visit.** A concise statement of why the patient is presenting today, in the patient's own words where possible.
+</ParamField>
+
+<ParamField body="enfermedad_actual" type="string" required>
+  **History of current illness.** A detailed narrative describing the onset, progression, duration, and character of the presenting complaint.
+</ParamField>
+
+<ParamField body="examen_fisico" type="string" required>
+  **Physical examination findings.** Objective observations recorded by the clinician during the encounter, including relevant system findings.
+</ParamField>
+
+<ParamField body="impresion_diagnostica" type="string" required>
+  **Diagnostic impression.** The clinician's working diagnosis or differential diagnosis based on the history and physical examination.
+</ParamField>
+
+<ParamField body="plan" type="string" required>
+  **Treatment plan.** The proposed management — medications prescribed, referrals, follow-up instructions, and any further diagnostic workup.
+</ParamField>
+
+<ParamField body="medico" type="string" required>
+  **Attending physician name.** The full name of the clinician conducting and signing off on this encounter.
+</ParamField>
+
+<Tip>
+  Keep **motivo_consulta** short and focused — it is the chief complaint in one or two sentences at most. Use **enfermedad_actual** for the full chronological narrative: when symptoms started, how they have evolved, associated symptoms, and relevant history.
+</Tip>
+
+<Note>
+  Evolutions are permanently linked to the patient identified in the URL (`paciente_id`). There is no mechanism to reassign an evolution to a different patient after it has been created.
+</Note>
+
+## Recording a new evolution
+
+<Steps>
+  <Step title="Open the patient record">
+    Navigate to `/hc/pacientes/ver/<id>` to open the patient's profile.
+  </Step>
+  <Step title="Go to the evolutions list">
+    Click **Evoluciones** to view all existing evolution notes for this patient at `/hc/evoluciones/paciente/<paciente_id>`.
+  </Step>
+  <Step title="Open the new evolution form">
+    Click **Nueva evolución** to open the blank consultation form at `/hc/evoluciones/nuevo/<paciente_id>`.
+  </Step>
+  <Step title="Fill in all fields">
+    Complete all six fields: chief complaint, history of current illness, physical examination, diagnostic impression, treatment plan, and attending physician name.
+  </Step>
+  <Step title="Submit the form">
+    Submit the form. On success, the application displays the flash message **"Evolución registrada correctamente"** and redirects back to the evolutions list for that patient.
+  </Step>
+</Steps>

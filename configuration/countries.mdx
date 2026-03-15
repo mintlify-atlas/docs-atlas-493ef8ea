@@ -1,0 +1,61 @@
+---
+title: "Countries"
+description: "Managing the countries reference list in VITACORE"
+---
+
+The countries list provides a standardized reference for nationality and origin fields used throughout patient and professional registration forms.
+
+**Route:** `/hc/configuracion/paises`
+
+## Fields
+
+<ParamField body="codigo_iso2" type="string" required>
+  The 2-letter ISO 3166-1 alpha-2 country code (e.g. `CO`, `US`, `MX`). Must be unique across all countries. Automatically uppercased by the server.
+</ParamField>
+
+<ParamField body="codigo_iso3" type="string">
+  The 3-letter ISO 3166-1 alpha-3 country code (e.g. `COL`, `USA`, `MEX`). Optional but recommended for interoperability. Automatically uppercased by the server.
+</ParamField>
+
+<ParamField body="nombre" type="string" required>
+  The full name of the country in Spanish (e.g. `Colombia`, `Estados Unidos`).
+</ParamField>
+
+## CRUD flow
+
+<Steps>
+  <Step title="List countries">
+    Navigate to `/hc/configuracion/paises`. Records are ordered alphabetically by `nombre`.
+  </Step>
+  <Step title="Create a country">
+    Click **Nuevo país**. Provide a unique `codigo_iso2` and `nombre`. The server will uppercase both ISO codes before saving.
+  </Step>
+  <Step title="Edit a country">
+    All fields are editable. Duplicate ISO2 check excludes the current record.
+  </Step>
+  <Step title="Toggle status">
+    Switch between `ACTIVO` and `INACTIVO` using the toggle action.
+  </Step>
+</Steps>
+
+## Duplicate validation
+
+The `codigo_iso2` field must be unique. The server looks up the existing record by ISO2 before creating or updating. If a match is found (and it is not the current record being edited), the form is rejected with a warning.
+
+<Tip>
+  Both `codigo_iso2` and `codigo_iso3` are automatically converted to uppercase by the server regardless of how they are entered. You do not need to type them in uppercase in the form.
+</Tip>
+
+## Example records
+
+```json
+[
+  { "codigo_iso2": "CO", "codigo_iso3": "COL", "nombre": "Colombia" },
+  { "codigo_iso2": "VE", "codigo_iso3": "VEN", "nombre": "Venezuela" },
+  { "codigo_iso2": "EC", "codigo_iso3": "ECU", "nombre": "Ecuador" },
+  { "codigo_iso2": "PE", "codigo_iso3": "PER", "nombre": "Perú" },
+  { "codigo_iso2": "MX", "codigo_iso3": "MEX", "nombre": "México" },
+  { "codigo_iso2": "US", "codigo_iso3": "USA", "nombre": "Estados Unidos" },
+  { "codigo_iso2": "ES", "codigo_iso3": "ESP", "nombre": "España" }
+]
+```

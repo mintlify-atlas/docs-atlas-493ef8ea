@@ -1,0 +1,65 @@
+---
+title: "Roles"
+description: "Creating and managing user roles in VITACORE"
+---
+
+Roles control what each user account can see and do inside VITACORE. Every user is assigned exactly one role. Permissions are defined per role, per module, using four access flags.
+
+**Route:** `/hc/configuracion/roles-permisos`
+
+## Creating a role
+
+Roles are created from a form panel on the roles page. Two fields are required:
+
+<ParamField body="code" type="string" required>
+  A lowercase slug that uniquely identifies the role (e.g. `admin`, `medico`, `recepcionista`). The server normalizes the value to lowercase before saving. Used internally for permission checks.
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  A human-readable label displayed in the UI and in user assignment dropdowns (e.g. `Administrador`, `Médico`, `Recepcionista`).
+</ParamField>
+
+New roles are created with `is_active: true`. Only active roles are listed in the user assignment dropdown.
+
+## Permission matrix
+
+Each role has a permission matrix stored in the `roles_modulos` table. For every module registered in the `modulos` table, a role can hold up to four boolean flags:
+
+| Flag | Description |
+|---|---|
+| `can_view` | User can navigate to and view the module |
+| `can_create` | User can create new records in the module |
+| `can_edit` | User can edit existing records |
+| `can_delete` | User can delete records |
+
+Modules with no entry in `roles_modulos` for a given role are treated as fully restricted (all flags `false`).
+
+## Editing permissions
+
+<Steps>
+  <Step title="Select a role">
+    Navigate to `/hc/configuracion/roles-permisos`. The sidebar lists all active roles. Click the role you want to configure. If a `role_id` query parameter is present it will be selected automatically.
+  </Step>
+  <Step title="Review the permission matrix">
+    The matrix is grouped by section. Each row represents a module. Check the boxes for `can_view`, `can_create`, `can_edit`, and `can_delete` as appropriate.
+  </Step>
+  <Step title="Save permissions">
+    Click **Guardar permisos**. The server deletes the existing permission rows for the role and inserts the new set in a single operation. Only modules with at least one flag checked are saved.
+  </Step>
+</Steps>
+
+## Example roles
+
+```json
+[
+  { "code": "admin",          "name": "Administrador" },
+  { "code": "medico",         "name": "Médico" },
+  { "code": "enfermeria",     "name": "Enfermería" },
+  { "code": "recepcionista",  "name": "Recepcionista" },
+  { "code": "auditoria",      "name": "Auditoría" }
+]
+```
+
+<Tip>
+  Create an `admin` role first and grant it full permissions on all modules. Use this role for the initial system administrator account so you can access all sections while completing the rest of the configuration.
+</Tip>

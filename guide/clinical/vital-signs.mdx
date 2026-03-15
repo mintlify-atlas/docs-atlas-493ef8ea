@@ -1,0 +1,90 @@
+---
+title: "Vital signs"
+description: "Recording and reviewing patient vital signs in VITACORE"
+---
+
+Vital signs tracking in VITACORE allows clinicians to record key biometric measurements at each encounter. Each entry captures anthropometric data (weight and height), hemodynamic readings (blood pressure, heart rate, respiratory rate), temperature, and free-text observations. Records are stored in the `hc_signos_vitales` Supabase table, scoped to a patient, and returned in reverse chronological order.
+
+**Body Mass Index (BMI) is calculated automatically** — clinicians enter weight and height, and the server computes BMI before saving the record.
+
+## Routes
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/hc/signos/paciente/<paciente_id>` | List all vital sign records for a patient |
+| `GET` | `/hc/signos/nuevo/<paciente_id>` | Render the new vital signs form |
+| `POST` | `/hc/signos/crear/<paciente_id>` | Submit and record new vital signs |
+
+## Automatic BMI calculation
+
+When a new vital signs record is submitted, `signos_crear` computes BMI server-side before inserting the row. The clinician never enters IMC manually.
+
+```python
+imc = peso / ((talla / 100) ** 2)
+imc = round(imc, 2)
+```
+
+Height (`talla`) is converted from centimeters to meters before squaring. The result is rounded to two decimal places.
+
+<Note>
+  If `talla` is submitted as `0` (or left blank), the division is skipped entirely and `imc` is stored as `0`. This prevents a division-by-zero error while still creating a valid record for the remaining measurements.
+</Note>
+
+## Fields
+
+<ParamField body="peso" type="float" required>
+  **Weight** in kilograms. Defaults to `0` if left blank. Used together with `talla` to compute BMI.
+</ParamField>
+
+<ParamField body="talla" type="float" required>
+  **Height** in centimeters. Defaults to `0` if left blank. Must be greater than `0` for BMI to be calculated.
+</ParamField>
+
+<ParamField body="imc" type="float">
+  **Body Mass Index.** Calculated automatically by the server — this field is **not** present in the form and should not be submitted by the client. Formula: `peso / (talla / 100)²`, rounded to 2 decimal places.
+</ParamField>
+
+<ParamField body="presion_sistolica" type="string">
+  **Systolic blood pressure** in mmHg (e.g. `120`).
+</ParamField>
+
+<ParamField body="presion_diastolica" type="string">
+  **Diastolic blood pressure** in mmHg (e.g. `80`).
+</ParamField>
+
+<ParamField body="frecuencia_cardiaca" type="string">
+  **Heart rate** in beats per minute.
+</ParamField>
+
+<ParamField body="frecuencia_respiratoria" type="string">
+  **Respiratory rate** in breaths per minute.
+</ParamField>
+
+<ParamField body="temperatura" type="string">
+  **Temperature** in degrees Celsius.
+</ParamField>
+
+<ParamField body="observaciones" type="string">
+  **Additional observations.** Free-text field for any relevant clinical notes not captured by the structured fields (e.g. oxygen saturation, pain score, patient appearance).
+</ParamField>
+
+## Recording vital signs
+
+<Steps>
+  <Step title="Open the patient record">
+    Navigate to the patient's profile at `/hc/pacientes/ver/<id>`.
+  </Step>
+  <Step title="Go to the vital signs list">
+    Click **Signos Vitales** to view existing vital sign records for this patient at `/hc/signos/paciente/<paciente_id>`.
+  </Step>
+  <Step title="Fill in the measurements">
+    Click **Nuevo registro** to open the form. Enter all available measurements — weight, height, blood pressure, heart rate, respiratory rate, temperature, and any observations.
+  </Step>
+  <Step title="Submit the form">
+    Submit the form. BMI is computed automatically on the server before the record is saved. On success, the application displays the flash message **"Signos vitales registrados"** and redirects back to the vital signs list.
+  </Step>
+</Steps>
+
+<Tip>
+  Record vital signs at every consultation **before** creating a clinical evolution note. Having current measurements available allows the evolution's physical examination section to reference accurate, timestamped biometric data from the same encounter.
+</Tip>

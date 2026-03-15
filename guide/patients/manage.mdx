@@ -1,0 +1,91 @@
+---
+title: "Managing patients"
+description: "View, edit, and deactivate patient records"
+---
+
+This page covers the day-to-day management of patient records: viewing the list, inspecting a record, editing demographic information, and toggling a patient's active status.
+
+## Patient list
+
+The patient list is available at `/hc/pacientes/`. It retrieves all records from `hc_pacientes` ordered alphabetically by `apellidos` then `nombres`, and joins the document type name from `hc_tipos_documento`.
+
+## Viewing a patient record
+
+To see the full demographic detail for a patient, navigate to:
+
+```text
+/hc/pacientes/ver/<id>
+```
+
+If the patient ID does not exist, a flash error message is shown and you are redirected to the list.
+
+## Editing a patient
+
+<Steps>
+  <Step title="Open the edit form">
+    Navigate to `/hc/pacientes/editar/<id>` or click the edit action for a patient in the list. The form is pre-filled with the current values and loads the available document types.
+
+    If the patient ID is not found, the system shows a flash error and redirects to the list.
+  </Step>
+  <Step title="Update the fields">
+    Modify any of the editable fields. See the accordion below for the full list.
+  </Step>
+  <Step title="Submit the form">
+    Click the submit button. The form POSTs to `/hc/pacientes/actualizar/<id>`. On success, a flash message is shown and you are redirected to the patient list.
+
+    > Paciente actualizado correctamente.
+  </Step>
+</Steps>
+
+<AccordionGroup>
+  <Accordion title="What fields can be edited?">
+    All demographic fields are editable via the update form:
+
+    | Field | Description |
+    |---|---|
+    | `tipo_documento_id` | Document type |
+    | `numero_documento` | Document number |
+    | `nombres` | First name(s) |
+    | `apellidos` | Last name(s) |
+    | `fecha_nacimiento` | Date of birth |
+    | `sexo` | Sex / gender |
+    | `telefono` | Landline phone |
+    | `celular` | Mobile phone |
+    | `email` | Email address |
+    | `direccion` | Home address |
+    | `aseguradora` | Insurance provider |
+
+    The `estado` field is **not** edited through this form — use the status toggle instead.
+  </Accordion>
+</AccordionGroup>
+
+## Toggling patient status
+
+Patient status can be switched between `ACTIVO` and `INACTIVO` without editing the record. The toggle action is a POST request to:
+
+```text
+POST /hc/pacientes/toggle/<id>
+```
+
+**How it works:**
+
+1. The system loads the current patient record.
+2. If `estado` is `ACTIVO`, it is changed to `INACTIVO`. If `INACTIVO`, it is changed to `ACTIVO`.
+3. A flash message confirms the action:
+   - > Paciente inactivado correctamente.
+   - > Paciente activado correctamente.
+4. You are redirected to the patient list.
+
+<Note>
+  Toggling status does **not** delete the patient record or remove any associated clinical data. The record is fully preserved and can be reactivated at any time by toggling again.
+</Note>
+
+## Route summary
+
+| Action | Method | Route |
+|---|---|---|
+| List patients | `GET` | `/hc/pacientes/` |
+| View patient | `GET` | `/hc/pacientes/ver/<id>` |
+| Edit form | `GET` | `/hc/pacientes/editar/<id>` |
+| Save edits | `POST` | `/hc/pacientes/actualizar/<id>` |
+| Toggle status | `POST` | `/hc/pacientes/toggle/<id>` |

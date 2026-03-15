@@ -1,0 +1,140 @@
+---
+title: "User management"
+description: "Creating and managing VITACORE system user accounts"
+---
+
+VITACORE distinguishes between two related but separate concepts:
+
+- **User** — a system login account managed in Supabase Auth, paired with a `profiles` record that stores the display name, username, role, and active status.
+- **Professional** — a healthcare provider in the `hc_profesionales` table. A professional represents a clinical staff member who delivers patient care and holds credentials such as a medical licence number and a specialty. A professional does **not** need a login account; a user account does **not** automatically make someone a professional.
+
+User management is accessed at **Configuración > Usuarios** (`/hc/configuracion/usuarios/`).
+
+---
+
+## Routes
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/hc/configuracion/usuarios/` | List all users and display the create form |
+| `POST` | `/hc/configuracion/usuarios/` | Submit the create form |
+| `GET` | `/hc/configuracion/usuarios/<user_id>/editar` | Display the edit form |
+| `POST` | `/hc/configuracion/usuarios/<user_id>/editar` | Submit the edit form |
+| `POST` | `/hc/configuracion/usuarios/<user_id>/estado` | Toggle the user's active status |
+
+---
+
+## Creating a user
+
+<Warning>
+  All five fields are required when creating a user. Submitting the form with any field empty — or with a password shorter than 6 characters — will return a validation error and no account will be created.
+</Warning>
+
+<Steps>
+  <Step title="Navigate to User management">
+    Go to **Configuración > Usuarios** or open `/hc/configuracion/usuarios/` directly. The page lists existing users and shows the create form.
+  </Step>
+
+  <Step title="Fill in the create form">
+    Complete every field in the **Nuevo usuario** section:
+
+    - **Username** — lowercase login handle
+    - **Full name** — display name shown throughout the application
+    - **Email** — address used for Supabase Auth
+    - **Password** — minimum 6 characters
+    - **Role** — select from the active roles list
+  </Step>
+
+  <Step title="Submit the form">
+    Click **Crear usuario**. The system calls `crear_usuario_con_perfil()`, which:
+
+    1. Creates a Supabase Auth account (`auth.users`) with `email_confirm` set to `true` — the user does not need to verify their email.
+    2. Inserts a `profiles` row using the new Auth user's `id`, storing the username, full name, email, role, and `is_active = true`.
+
+    On success you will see the flash message: **"Usuario creado correctamente."**
+  </Step>
+</Steps>
+
+---
+
+## Create form fields
+
+<ParamField body="username" type="string" required>
+  Unique login handle for the user. Automatically converted to lowercase before saving. Used when identifying the user in the `profiles` table.
+</ParamField>
+
+<ParamField body="full_name" type="string" required>
+  Human-readable display name shown in the UI. Stored in both the `profiles` table and in Supabase Auth `user_metadata`.
+</ParamField>
+
+<ParamField body="email" type="string" required>
+  Email address registered in Supabase Auth. Automatically converted to lowercase. Must be a valid email; duplicates are rejected by Supabase Auth.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  Initial password for the account. Minimum 6 characters. Passwords shorter than 6 characters are rejected before the Supabase Auth call is made.
+</ParamField>
+
+<ParamField body="role_id" type="integer" required>
+  ID of the role to assign. Only roles with `is_active = true` appear in the dropdown. Must be a valid integer; a non-numeric value triggers a "Rol inválido" error.
+</ParamField>
+
+---
+
+## Editing a user
+
+Navigate to **Editar** next to any user in the list, or open `/hc/configuracion/usuarios/<user_id>/editar`.
+
+The edit form contains the same fields as the create form, **except password** — the password cannot be changed from this screen. An additional **Estado** toggle is available:
+
+<ParamField body="username" type="string" required>
+  Same rules as create. Converted to lowercase on save.
+</ParamField>
+
+<ParamField body="full_name" type="string" required>
+  Updated in both `profiles` and Supabase Auth `user_metadata.full_name`.
+</ParamField>
+
+<ParamField body="email" type="string" required>
+  Updated in both `profiles` and `auth.users` via `auth.admin.update_user_by_id()`.
+</ParamField>
+
+<ParamField body="role_id" type="integer" required>
+  Re-assigns the user's role. Same validation rules as create.
+</ParamField>
+
+<ParamField body="is_active" type="boolean">
+  Checkbox mapped to `"1"` when checked. Controls whether the user can log in. Defaults to the user's current state.
+</ParamField>
+
+On success the flash message reads: **"Usuario actualizado correctamente."**
+
+---
+
+## Toggling active status
+
+Posting to `/hc/configuracion/usuarios/<user_id>/estado` flips the user's `is_active` boolean in the `profiles` table.
+
+- `is_active = true` — the user can log in normally.
+- `is_active = false` — the user is blocked at login. The auth check in `blueprints/auth/decorators.py` reads this flag on every request.
+
+The toggle reads the current state from `profiles`, inverts it, and writes the new value via `cambiar_estado_usuario()`. No email notification is sent.
+
+On success: **"Estado del usuario actualizado correctamente."**
+
+---
+
+## Data model overview
+
+```
+Supabase Auth (auth.users)
+  └── profiles
+        ├── id          (= auth.users.id)
+        ├── username
+        ├── full_name
+        ├── email
+        ├── role_id  ──► roles
+        └── is_active
+```
+
+The `profiles` table uses the same UUID as the corresponding `auth.users` row. Deleting a user from Supabase Auth without removing the `profiles` row will leave an orphaned profile.

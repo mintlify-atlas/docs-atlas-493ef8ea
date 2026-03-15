@@ -1,0 +1,89 @@
+---
+title: "Creating a patient"
+description: "How to create a new patient record in VITACORE"
+---
+
+Follow the steps below to register a new patient in the system.
+
+<Steps>
+  <Step title="Open the patient list">
+    Navigate to **Pacientes** in the sidebar or go directly to `/hc/pacientes/`. This is the main patient list page.
+  </Step>
+  <Step title="Click Nuevo paciente">
+    Click the **Nuevo paciente** button. The application navigates to `/hc/pacientes/nuevo` and renders the creation form, pre-loading all configured document types from `hc_tipos_documento`.
+  </Step>
+  <Step title="Select a document type">
+    Choose the document type from the dropdown. The list is ordered by status and code and reflects only the document types configured in your VITACORE instance.
+  </Step>
+  <Step title="Fill in the patient fields">
+    Complete the required fields and any optional demographic information. See the field reference below.
+  </Step>
+  <Step title="Submit the form">
+    Click the submit button. The form POSTs to `/hc/pacientes/crear`. If creation succeeds, you are redirected to the patient list with a success message.
+  </Step>
+</Steps>
+
+## Field reference
+
+<ParamField body="tipo_documento_id" type="string" required>
+  The ID of the document type selected from the dropdown. Document types are managed in the `hc_tipos_documento` table and each has a `codigo` and `nombre`.
+</ParamField>
+
+<ParamField body="numero_documento" type="string" required>
+  The patient's document number. Must be unique across all patient records. The system performs a duplicate check before inserting — see the warning below.
+</ParamField>
+
+<ParamField body="nombres" type="string" required>
+  The patient's first name(s). Whitespace is trimmed before storage.
+</ParamField>
+
+<ParamField body="apellidos" type="string" required>
+  The patient's last name(s). Whitespace is trimmed before storage. The patient list is sorted alphabetically by `apellidos`, then `nombres`.
+</ParamField>
+
+<ParamField body="fecha_nacimiento" type="string">
+  Date of birth. Accepted in standard date format (`YYYY-MM-DD`).
+</ParamField>
+
+<ParamField body="sexo" type="string">
+  Sex or gender of the patient.
+</ParamField>
+
+<ParamField body="telefono" type="string">
+  Landline phone number.
+</ParamField>
+
+<ParamField body="celular" type="string">
+  Mobile phone number.
+</ParamField>
+
+<ParamField body="email" type="string">
+  Email address.
+</ParamField>
+
+<ParamField body="direccion" type="string">
+  Home address.
+</ParamField>
+
+<ParamField body="aseguradora" type="string">
+  Name of the patient's health insurance provider.
+</ParamField>
+
+<Warning>
+  **Duplicate document detection** — before saving, the system checks whether a patient with the same `numero_documento` already exists. If one is found, creation is blocked and the following flash message is displayed:
+
+  > Ya existe un paciente con ese documento.
+
+  You are redirected back to the patient list. Verify the document number and search the list before attempting to create the record again.
+</Warning>
+
+## On success
+
+When the patient is created successfully:
+
+- The record is inserted into `hc_pacientes` with `estado` set to `ACTIVO`.
+- A flash message is shown:
+
+  > Paciente creado correctamente.
+
+- You are redirected to `/hc/pacientes/`.

@@ -1,0 +1,159 @@
+---
+title: "Roles & permissions"
+description: "Role-based access control in VITACORE — managing roles, module permission matrices, and per-route access control."
+---
+
+VITACORE implements a two-layer access control system:
+
+<CardGroup cols={2}>
+  <Card title="Module permissions" icon="grid-2">
+    Each role is assigned per-module flags (`can_view`, `can_create`, `can_edit`, `can_delete`) through the **Roles y Permisos** UI. These control what actions a role may perform inside each section of the application.
+  </Card>
+  <Card title="Route permissions" icon="route">
+    Each role is granted access to specific Flask endpoints via the **Permisos por Ruta** UI. The `rol_required(usar_matriz=True)` decorator enforces this at request time by querying the `roles_rutas` table.
+  </Card>
+</CardGroup>
+
+---
+
+## Role fields in the session
+
+After login, the user's role is encoded in `session["user"]`. The three role-related fields are:
+
+| Field | Description |
+|-------|-------------|
+| `role_id` | Numeric role ID (FK to the `roles` table) — used for database lookups |
+| `role` | Role code, e.g. `"admin"`, `"medico"`, `"enfermero"` — used for static decorator checks |
+| `role_name` | Human-readable role name, e.g. `"Administrador"` — used for display purposes only |
+
+---
+
+## Module permission matrix
+
+Modules (`hc_modulos` / `modulos` table) represent discrete sections of the application — Patients, Evolutions, Configuration, etc. Each module carries the following metadata:
+
+| Column | Description |
+|--------|-------------|
+| `code` | Unique slug identifier |
+| `name` | Display name shown in the UI |
+| `endpoint` | Flask endpoint name for routing |
+| `section` | Group heading in the sidebar (e.g. `CLINICO`, `CONFIGURACION`) |
+| `visible_in_sidebar` | Whether the module appears in the navigation menu |
+| `sort_order` | Display order within its section |
+
+Permissions are stored in the `roles_modulos` join table, one row per role–module pair:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `role_id` | integer | FK to `roles` |
+| `modulo_id` | integer | FK to `modulos` |
+| `can_view` | boolean | User can view records in this module |
+| `can_create` | boolean | User can create new records |
+| `can_edit` | boolean | User can edit existing records |
+| `can_delete` | boolean | User can delete records |
+
+Only modules where at least one flag is `True` produce a row in `roles_modulos`. Modules with no row default to all-`False`.
+
+---
+
+## Managing roles and permissions
+
+Navigate to **Configuración > Roles y Permisos** (`/hc/configuracion/roles-permisos`) to manage roles.
+
+<Tip>
+  Create an `admin` role with full permissions across all modules before creating any other roles. This ensures that an administrator account always has unrestricted access to configure the system.
+</Tip>
+
+### Create a new role
+
+<Steps>
+  <Step title="Open Roles y Permisos">
+    Go to `/hc/configuracion/roles-permisos`. The left sidebar lists all active roles.
+  </Step>
+  <Step title="Fill in the new role form">
+    In the **Crear rol** form, enter two values:
+
+    | Field | Format | Example |
+    |-------|--------|---------|
+    | `code` | Lowercase slug, no spaces | `medico`, `enfermero_jefe` |
+    | `name` | Human-readable label | `Médico`, `Enfermero Jefe` |
+
+    The `code` is stored lowercased regardless of what is typed. It is the value matched against the `*roles_permitidos` arguments of `@rol_required`.
+  </Step>
+  <Step title="Submit">
+    Click **Crear**. The page reloads with the new role selected in the sidebar.
+  </Step>
+</Steps>
+
+### Assign module permissions
+
+<Steps>
+  <Step title="Select a role">
+    Click any role in the left sidebar. The permission matrix for that role loads in the main panel, organized by section.
+  </Step>
+  <Step title="Configure per-module flags">
+    For each module, check or uncheck **View**, **Create**, **Edit**, and **Delete** as appropriate for the role.
+  </Step>
+  <Step title="Save">
+    Click **Guardar permisos**. The system performs a full replace: existing `roles_modulos` rows for the selected role are deleted and the checked permissions are re-inserted in a single operation.
+  </Step>
+</Steps>
+
+---
+
+## Route-level permission control
+
+In addition to module flags, VITACORE provides fine-grained control over which Flask endpoints each role can call.
+
+### How it works
+
+All application routes are stored in the `rutas` table (endpoint name, URL pattern, HTTP methods). An administrator grants a role access to individual routes via the **Permisos por Ruta** page (`/hc/configuracion/permisos-rutas`).
+
+At request time, the `rol_required(usar_matriz=True)` decorator calls `tiene_permiso_endpoint(role_id, endpoint)` which executes:
+
+```python
+# security_repository.py
+def tiene_permiso_endpoint(role_id: int, endpoint: str) -> bool:
+    res = (
+        supabase
+        .table("roles_rutas")
+        .select("id, rutas!inner(id, endpoint)")
+        .eq("role_id", role_id)
+        .eq("rutas.endpoint", endpoint)
+        .limit(1)
+        .execute()
+    )
+    return len(res.data or []) > 0
+```
+
+A `True` result grants access; `False` renders `acceso_denegado.html` with HTTP 403.
+
+<Note>
+  `usar_matriz=True` queries the database on **every request** — there is no session-level caching of route permissions. This means changes made in **Permisos por Ruta** take effect immediately without requiring users to log out and back in.
+</Note>
+
+### Syncing routes
+
+When new routes are added to the application, they must be registered in the `rutas` table before they can be assigned to roles. Hit `GET /admin/sync_rutas` to upsert all current Flask URL rules into the table automatically.
+
+```bash
+curl http://localhost:5000/admin/sync_rutas
+# { "status": "ok", "rutas_sincronizadas": 42 }
+```
+
+### Assign route permissions
+
+<Steps>
+  <Step title="Open Permisos por Ruta">
+    Navigate to `/hc/configuracion/permisos-rutas`.
+  </Step>
+  <Step title="Select a role">
+    Choose the target role from the sidebar.
+  </Step>
+  <Step title="Toggle endpoints">
+    The main panel lists every registered route. Check the endpoints the role should be allowed to access.
+  </Step>
+  <Step title="Save">
+    Click **Guardar**. As with module permissions, the operation is a full replace — all previous `roles_rutas` rows for the role are removed and the new selection is inserted.
+  </Step>
+</Steps>

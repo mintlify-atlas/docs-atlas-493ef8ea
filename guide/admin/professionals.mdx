@@ -1,0 +1,169 @@
+---
+title: "Healthcare professionals"
+description: "Managing the healthcare professional registry in VITACORE"
+---
+
+The **profesionales** registry is the authoritative list of clinical staff who deliver patient care in VITACORE. Each record stores the provider's identity documents, specialty, assigned location, and professional licence number.
+
+A professional is independent of a system user account. A provider can exist in the registry without the ability to log into VITACORE, and a system user does not automatically appear in the professional registry. The two records must be created separately if both are needed.
+
+Professionals are managed at **Configuración > Profesionales** (`/hc/configuracion/profesionales`).
+
+---
+
+## Routes
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/hc/configuracion/profesionales` | List all professionals |
+| `GET` | `/hc/configuracion/profesionales/nuevo` | Display the create form |
+| `POST` | `/hc/configuracion/profesionales/nuevo` | Submit the create form |
+| `GET` | `/hc/configuracion/profesionales/editar/<id>` | Display the edit form |
+| `POST` | `/hc/configuracion/profesionales/editar/<id>` | Submit the edit form |
+| `POST` | `/hc/configuracion/profesionales/toggle/<id>` | Toggle active/inactive status |
+
+---
+
+## Creating a professional
+
+<Steps>
+  <Step title="Navigate to the professional registry">
+    Go to **Configuración > Profesionales** or open `/hc/configuracion/profesionales` directly.
+  </Step>
+
+  <Step title="Open the create form">
+    Click **Nuevo profesional**. The form loads with dropdown lists for document types, specialties, sedes, and consultorios fetched from their respective configuration tables.
+  </Step>
+
+  <Step title="Fill in the required fields">
+    At minimum provide:
+
+    - **Tipo de documento** — select the document type from the dropdown
+    - **Número de documento** — enter the document number
+    - **Nombres** — enter the provider's first name(s)
+    - **Apellidos** — enter the provider's last name(s)
+
+    Optionally fill in specialty, location, licence number, email, and phone.
+  </Step>
+
+  <Step title="Submit the form">
+    Click **Guardar**. The system checks that the combination of `tipo_documento_id` + `numero_documento` does not already exist in `hc_profesionales` before inserting the record. A `nombre_completo` field is automatically computed by concatenating `nombres` and `apellidos`.
+
+    On success: **"Profesional creado correctamente."**
+  </Step>
+</Steps>
+
+---
+
+## Form fields
+
+### Identity
+
+<ParamField body="tipo_documento_id" type="integer" required>
+  ID of the document type (e.g. Cédula de Ciudadanía, Pasaporte). Sourced from the `hc_tipos_documento` table. Together with `numero_documento` forms the uniqueness key for the professional.
+</ParamField>
+
+<ParamField body="numero_documento" type="string" required>
+  Document number. Must be unique within the selected document type. The duplicate check is case-insensitive (`ilike`).
+</ParamField>
+
+<ParamField body="nombres" type="string" required>
+  First name(s) of the healthcare professional.
+</ParamField>
+
+<ParamField body="apellidos" type="string" required>
+  Last name(s) of the healthcare professional.
+</ParamField>
+
+### Assignment
+
+<ParamField body="especialidad_id" type="integer">
+  Optional. Medical specialty assigned to this professional. Sourced from the `hc_especialidades` table.
+</ParamField>
+
+<ParamField body="sede_id" type="integer">
+  Optional. Headquarters (sede) where this professional primarily works. Sourced from the `hc_sedes` table.
+</ParamField>
+
+<ParamField body="consultorio_id" type="integer">
+  Optional. Office or room within the selected sede. Sourced from the `hc_consultorios` table.
+</ParamField>
+
+### Credentials and contact
+
+<ParamField body="registro_profesional" type="string">
+  Optional. Professional licence or registration number issued by the relevant medical authority.
+</ParamField>
+
+<ParamField body="correo" type="string">
+  Optional. Professional's contact email address. Not linked to a VITACORE login account.
+</ParamField>
+
+<ParamField body="telefono" type="string">
+  Optional. Contact phone number.
+</ParamField>
+
+### Status
+
+<ParamField body="estado" type="string">
+  `ACTIVO` or `INACTIVO`. Defaults to `ACTIVO` on creation. Controls visibility and availability of the professional in clinical workflows.
+</ParamField>
+
+---
+
+## Duplicate document detection
+
+The combination of `tipo_documento_id` + `numero_documento` must be unique across the entire `hc_profesionales` table. The check is performed before every insert and update:
+
+```python
+# hc_profesionales_repo.py — existe_documento()
+query = (
+    _sb()
+    .table("hc_profesionales")
+    .select("id")
+    .eq("tipo_documento_id", int(tipo_documento_id))
+    .ilike("numero_documento", numero_documento)
+)
+```
+
+If a match is found the form is re-rendered with the message: **"Ya existe un profesional con ese tipo y número de documento."** (or **"Ya existe otro profesional..."** on edit).
+
+<Note>
+  The comparison is case-insensitive. `CC 123` and `cc 123` are treated as the same document number for the same document type.
+</Note>
+
+---
+
+## Toggling active status
+
+Posting to `/hc/configuracion/profesionales/toggle/<id>` alternates the `estado` field between `ACTIVO` and `INACTIVO`.
+
+- **ACTIVO** — the professional appears in patient-facing workflows and scheduling.
+- **INACTIVO** — the professional is hidden from selection lists but their historical records are preserved.
+
+On success: **"Profesional activado correctamente."** or **"Profesional inactivado correctamente."**
+
+---
+
+## Editing a professional
+
+Open `/hc/configuracion/profesionales/editar/<id>`. All fields are editable, including the document type and number. The duplicate check is re-run on save, excluding the record being edited (`exclude_id=item_id`).
+
+On success: **"Profesional actualizado correctamente."**
+
+---
+
+## Data model overview
+
+```
+hc_profesionales
+  ├── tipo_documento_id  ──► hc_tipos_documento
+  ├── numero_documento
+  ├── nombres / apellidos / nombre_completo
+  ├── especialidad_id    ──► hc_especialidades
+  ├── sede_id            ──► hc_sedes
+  ├── consultorio_id     ──► hc_consultorios
+  ├── registro_profesional
+  ├── correo / telefono
+  └── estado
+```

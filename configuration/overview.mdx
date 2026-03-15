@@ -1,0 +1,67 @@
+---
+title: "Configuration overview"
+description: "System-wide configuration settings required before clinical use in VITACORE"
+---
+
+VITACORE requires a set of foundational configuration steps before the system can be used for clinical operations. These settings define the physical locations, medical catalog, identity references, and access rules that every other module depends on.
+
+## Configuration sections
+
+<CardGroup cols={2}>
+  <Card title="Headquarters" icon="building" href="/configuration/headquarters">
+    Register the physical locations (sedes) where care is delivered.
+  </Card>
+  <Card title="Offices" icon="door-open" href="/configuration/offices">
+    Define individual consultation rooms within each headquarters.
+  </Card>
+  <Card title="Specialties" icon="stethoscope" href="/configuration/specialties">
+    Manage the medical specialties available in the system.
+  </Card>
+  <Card title="Document types" icon="id-card" href="/configuration/document-types">
+    Configure the identification document types used in patient and professional registration.
+  </Card>
+  <Card title="Countries" icon="globe" href="/configuration/countries">
+    Maintain the countries reference list used across forms.
+  </Card>
+  <Card title="Services" icon="list-check" href="/configuration/services">
+    Build the catalog of medical services offered.
+  </Card>
+  <Card title="Roles" icon="shield-halved" href="/configuration/roles">
+    Create roles and define per-module permissions.
+  </Card>
+  <Card title="Users" icon="users" href="/configuration/users">
+    Create and manage system user accounts.
+  </Card>
+</CardGroup>
+
+## Recommended setup order
+
+Follow this order to avoid dependency errors when configuring VITACORE for the first time.
+
+<Steps>
+  <Step title="Create document types">
+    Document types are required when registering patients and healthcare professionals. Go to [Document types](/configuration/document-types) and add at least the identification documents used in your country (e.g. national ID, passport).
+  </Step>
+  <Step title="Create specialties">
+    Specialties are referenced by both healthcare professionals and services. Go to [Specialties](/configuration/specialties) and add all medical disciplines practiced at your facility.
+  </Step>
+  <Step title="Create headquarters">
+    Headquarters (sedes) represent the physical locations of your facility. Go to [Headquarters](/configuration/headquarters) and register at least one active sede before creating offices or assigning professionals.
+  </Step>
+  <Step title="Create offices">
+    Offices (consultorios) belong to a sede. Go to [Offices](/configuration/offices) and add the individual consultation rooms. Each office requires a sede to exist first.
+  </Step>
+  <Step title="Register healthcare professionals">
+    With document types, specialties, sedes, and offices in place you can register the clinical staff under **Configuration → Professionals**.
+  </Step>
+  <Step title="Create roles and assign permissions">
+    Go to [Roles](/configuration/roles), create at least one role, and assign per-module permissions via the permission matrix.
+  </Step>
+  <Step title="Create user accounts">
+    Go to [Users](/configuration/users) and create login accounts for each staff member, linking them to a role.
+  </Step>
+</Steps>
+
+<Tip>
+  Sample seed data for document types, specialties, and sedes is available as JSON files in the `data/` directory of the source repository. You can use these files to pre-populate the database during initial deployment.
+</Tip>

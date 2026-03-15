@@ -1,0 +1,139 @@
+---
+title: "Login & session management"
+description: "How authentication works in VITACORE — two-step sign-in, Flask session contents, and the decorator guards that protect every route."
+---
+
+VITACORE uses a two-step authentication flow: a profile lookup against the application database followed by a Supabase Auth credential check. On success, a Flask server-side session is created and kept alive for the duration of the browser session.
+
+## Endpoints
+
+| Method | URL | Purpose |
+|--------|-----|---------|
+| `GET` | `/auth/login` | Render the login form |
+| `POST` | `/auth/login` | Submit credentials |
+| `GET` | `/auth/logout` | Destroy the session and redirect to login |
+
+---
+
+## Two-step login flow
+
+<Steps>
+  <Step title="Profile lookup">
+    VITACORE queries the `hc_profesionales` (profiles) table using `obtener_perfil_por_username`. The lookup is case-insensitive — the submitted username is lowercased before matching.
+
+    If no profile is found, or if the profile has `is_active = False`, the login is rejected immediately without ever reaching Supabase.
+  </Step>
+
+  <Step title="Supabase Auth sign-in">
+    Once a valid, active profile is found, VITACORE extracts the `email` stored on that profile and sends it — together with the submitted password — to Supabase Auth via `sign_in_with_password`.
+
+    ```python
+    response = supabase.auth.sign_in_with_password({
+        "email": email,
+        "password": password
+    })
+    ```
+
+    If Supabase returns no `user` or no `session` object, the login fails with an "incorrect credentials" message. The raw password is never stored in VITACORE's own database.
+  </Step>
+
+  <Step title="Session population">
+    On success, two keys are written to the Flask session:
+
+    **`session["user"]`** — a plain dict with the user's identity and role:
+
+    | Key | Type | Description |
+    |-----|------|-------------|
+    | `id` | string | Profile UUID from `hc_profesionales` |
+    | `username` | string | Login handle |
+    | `full_name` | string | Display name |
+    | `email` | string | Email address |
+    | `role_id` | integer | Numeric FK to the `roles` table |
+    | `role` | string | Role code (e.g. `"admin"`, `"medico"`) |
+    | `role_name` | string | Human-readable role name |
+
+    **`session["supabase_access_token"]`** and **`session["supabase_refresh_token"]`** — the JWT tokens returned by Supabase, used for authenticated API calls on the user's behalf.
+  </Step>
+</Steps>
+
+<Warning>
+  Users with `is_active = False` in the profiles table are blocked at step 1. They will see the message **"Tu usuario está inactivo"** and the Supabase sign-in is never attempted. To re-enable access, an administrator must set `is_active = True` directly in the database or through the admin panel.
+</Warning>
+
+---
+
+## Logout flow
+
+Navigating to `GET /auth/logout` unconditionally clears the entire Flask session with `session.clear()`, flashes a confirmation message, and redirects to `/auth/login`. This also invalidates the stored Supabase tokens on the server side — no separate Supabase sign-out call is made.
+
+---
+
+## Route protection decorators
+
+Two decorators are provided in `blueprints/auth/decorators.py` and must be stacked below `@route` on every protected view.
+
+### `@login_required`
+
+Verifies that `session["user"]` exists. If the key is absent the request is redirected (or, for JSON/AJAX requests, a `401` JSON response is returned).
+
+```python
+from blueprints.auth.decorators import login_required
+
+@bp.route("/patients")
+@login_required
+def patients():
+    ...
+```
+
+Unauthenticated requests are redirected to `/auth/login`. AJAX requests (detected via `X-Requested-With: XMLHttpRequest` or a JSON `Content-Type`) receive:
+
+```json
+{
+  "error": "No has iniciado sesión.",
+  "redirect": "/auth/login"
+}
+```
+
+### `@rol_required`
+
+Extends `@login_required` with role and/or permission-matrix checks. It accepts two optional inputs:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `*roles_permitidos` | strings | One or more role **codes** that are statically allowed (e.g. `"admin"`, `"medico"`). Checked first. |
+| `usar_matriz` | bool (default `True`) | When `True` and static role check fails, performs a **live database lookup** against the `roles_rutas` permission matrix for the current Flask endpoint. |
+
+```python
+from blueprints.auth.decorators import login_required, rol_required
+
+# Static role check only
+@bp.route("/admin/settings")
+@login_required
+@rol_required("admin")
+def admin_settings():
+    ...
+
+# Matrix check only (default)
+@bp.route("/hc/configuracion/roles-permisos/")
+@login_required
+@rol_required(usar_matriz=True)
+def roles_permisos():
+    ...
+
+# Both: static roles checked first, matrix as fallback
+@bp.route("/hc/reports")
+@login_required
+@rol_required("admin", "supervisor", usar_matriz=True)
+def reports():
+    ...
+```
+
+**Authorization logic (in order):**
+
+1. If `roles_permitidos` is provided and the user's `role` code matches any entry → **authorized**.
+2. Else if `usar_matriz=True` and a `role_id` is in session → queries `roles_rutas` via `tiene_permiso_endpoint(role_id, endpoint)` → **authorized** if a matching row exists.
+3. If neither check passes → returns the `acceso_denegado.html` template with HTTP `403` (or a JSON `403` for AJAX).
+
+<Note>
+  `usar_matriz=True` performs a **live query** on every request — permissions are not cached in the session. This means that an administrator can grant or revoke route access and the change takes effect immediately on the next request without requiring re-login.
+</Note>

@@ -1,0 +1,65 @@
+---
+title: "Medical specialties"
+description: "Managing medical specialties available in VITACORE"
+---
+
+Medical specialties define the clinical disciplines practiced at your facility. They are referenced when registering healthcare professionals and when building the services catalog.
+
+**Route:** `/hc/configuracion/especialidades`
+
+## Fields
+
+<ParamField body="codigo" type="string" required>
+  A short, unique code for the specialty (e.g. `MG`, `CARDIO`, `PEDIATRIA`). Stored in uppercase. The duplicate check is case-insensitive.
+</ParamField>
+
+<ParamField body="nombre" type="string" required>
+  The full display name of the specialty (e.g. `Medicina General`, `Cardiología`).
+</ParamField>
+
+<ParamField body="descripcion" type="string">
+  An optional description of the specialty's scope.
+</ParamField>
+
+<ParamField body="estado" type="string">
+  Status of the specialty. Accepted values: `ACTIVA` or `INACTIVA`.
+</ParamField>
+
+## CRUD flow
+
+<Steps>
+  <Step title="List specialties">
+    Navigate to `/hc/configuracion/especialidades`. Active specialties appear first, sorted by name.
+  </Step>
+  <Step title="Create a specialty">
+    Click **Nueva especialidad** and provide a unique `codigo` and a `nombre`.
+  </Step>
+  <Step title="Edit a specialty">
+    All fields are editable. The duplicate-code check is case-insensitive and excludes the current record.
+  </Step>
+  <Step title="Toggle status">
+    Switch between `ACTIVA` and `INACTIVA` using the toggle action.
+  </Step>
+</Steps>
+
+## Sample data
+
+The following examples represent a typical Colombian primary and secondary care catalog:
+
+```json
+[
+  { "codigo": "MG",       "nombre": "Medicina General",        "estado": "ACTIVA" },
+  { "codigo": "CARDIO",   "nombre": "Cardiología",             "estado": "ACTIVA" },
+  { "codigo": "PEDIATRIA","nombre": "Pediatría",               "estado": "ACTIVA" },
+  { "codigo": "GINECO",   "nombre": "Ginecología y Obstetricia","estado": "ACTIVA" },
+  { "codigo": "ORTOPED",  "nombre": "Ortopedia y Traumatología","estado": "ACTIVA" },
+  { "codigo": "DERMATO",  "nombre": "Dermatología",            "estado": "ACTIVA" },
+  { "codigo": "PSIQUI",   "nombre": "Psiquiatría",             "estado": "ACTIVA" },
+  { "codigo": "NUTRI",    "nombre": "Nutrición y Dietética",   "estado": "ACTIVA" }
+]
+```
+
+## Where specialties are used
+
+- **Healthcare professionals** — each professional is assigned a primary specialty.
+- **Medical services** — a service can optionally reference a specialty (e.g. "Ecografía obstétrica" → Ginecología).

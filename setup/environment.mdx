@@ -1,0 +1,73 @@
+---
+title: "Environment configuration"
+description: "Configure environment variables for VITACORE."
+---
+
+VITACORE reads its configuration from a `.env` file in the project root, loaded at startup by `python-dotenv`. These values are then consumed by the `Config` class in `config.py` and made available to Flask via `app.config`.
+
+## .env file format
+
+Create a file named `.env` in the project root:
+
+```env .env
+FLASK_SECRET_KEY=change-me-to-a-long-random-string
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_TABLE_HC_PROFESIONALES=hc_profesionales
+```
+
+## Environment variables
+
+<ParamField query="FLASK_SECRET_KEY" type="string" required>
+  Secret key used by Flask to sign session cookies. Set this to a long, random string. You can generate one with:
+
+  ```bash
+  python -c "import secrets; print(secrets.token_hex(32))"
+  ```
+</ParamField>
+
+<ParamField query="SUPABASE_URL" type="string" required>
+  The base URL of your Supabase project. Found in your Supabase dashboard under **Settings → API → Project URL**.
+
+  Example: `https://abcdefghijklmnop.supabase.co`
+</ParamField>
+
+<ParamField query="SUPABASE_ANON_KEY" type="string" required>
+  The anonymous (public) API key for your Supabase project. Used by `get_supabase_public()` for operations that run under the authenticated user's session, such as signing in with a password.
+
+  Found in **Settings → API → Project API keys → `anon` `public`**.
+</ParamField>
+
+<ParamField query="SUPABASE_SERVICE_ROLE_KEY" type="string" required>
+  The service role API key for your Supabase project. Used by `get_supabase_admin()` for privileged server-side operations such as looking up a user profile by username during login.
+
+  Found in **Settings → API → Project API keys → `service_role` `secret`**.
+
+  <Warning>
+    The service role key bypasses Supabase Row Level Security (RLS) and grants full read/write access to your database. It must only be used in server-side code and must **never** be exposed in client-side JavaScript, mobile apps, or public repositories.
+  </Warning>
+</ParamField>
+
+<ParamField query="SUPABASE_TABLE_HC_PROFESIONALES" type="string" default="hc_profesionales">
+  Override the table name used to store healthcare professional records. Defaults to `hc_profesionales` if not set. Change this only if your Supabase schema uses a different table name.
+</ParamField>
+
+## Complete .env example
+
+```env .env
+# Flask
+FLASK_SECRET_KEY=3f7a9c2b1e4d8f6a0c5b2e7d9f1a3c8b2d4f6e0a9c1b5d7f3a2e4c6b8d0f1a
+
+# Supabase — get these from Settings → API in your Supabase dashboard
+SUPABASE_URL=https://abcdefghijklmnop.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# Table name overrides (optional)
+SUPABASE_TABLE_HC_PROFESIONALES=hc_profesionales
+```
+
+<Note>
+  The `.gitignore` in the repository excludes `.env` by default. Verify this before committing to avoid accidentally exposing your credentials.
+</Note>
